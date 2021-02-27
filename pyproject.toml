@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "flox-sentry"
+version = "0.1.0"
+homepage = "https://github.com/getflox/flox-sentry"
+description = "Automatically create projects and teams for flox managed projects"
+authors = ["Michal Przytulski <michal@przytulski.pl>", "Daniel Ancuta <whisller@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests-toolbelt = "^0.9.1"
+flox-core = {path = "../flox-core"}
+requests_toolbelt = "^0.9.1"
+python-slugify = "^4.0.0"
+
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.plugins."flox.plugin"]
+sentry = "flox_sentry:plugin"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
