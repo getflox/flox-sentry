@@ -7,11 +7,10 @@ authors = ["Michal Przytulski <michal@przytulski.pl>", "Daniel Ancuta <whisller@
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
-requests-toolbelt = "^0.9.1"
-flox-core = {path = "../flox-core"}
-requests_toolbelt = "^0.9.1"
-python-slugify = "^4.0.0"
+python = "^3.8"
+requests-toolbelt = "^0.9"
+python-slugify = "^4.0"
+flox-core = {git = "https://github.com/getflox/flox-core.git"}
 
 
 [tool.poetry.dev-dependencies]
