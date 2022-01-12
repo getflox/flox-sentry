@@ -25,7 +25,20 @@ def create_project(flox: Flox, sentry: Sentry, out, **kwargs):
         out.info(e)
     except SentryException as e:
         out.error(e)
+        return {}
 
+    key = {}
+    try:
+        key = sentry.create_key(flox.id, "flox")
+    except DuplicatedException as e:
+        out.info(e)
+    except SentryException as e:
+        out.error(e)
+        return {}
+
+    return dict(
+        dsn=key.get("sentry_dsn", {}).get("public")
+    )
 
 @with_sentry
 def assing_teams(flox: Flox, sentry: Sentry, out, **kwargs):

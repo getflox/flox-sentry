@@ -12,7 +12,7 @@ class SentryPlugin(Plugin):
     def handle_project(self, flox: Flox):
         return [
             Stage(create_team, require=["sentry.create_team"]),
-            Stage(create_project),
+            Stage(create_project, 1900),
             Stage(assing_teams),
         ]
 
