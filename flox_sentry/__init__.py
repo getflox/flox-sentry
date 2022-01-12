@@ -1,8 +1,9 @@
-from flox_sentry.configure import SentryConfiguration
-from flox_sentry.project import create_team, create_project, assing_teams, dump_variables
 from floxcore.command import Stage
 from floxcore.context import Flox
 from floxcore.plugin import Plugin
+
+from flox_sentry.configure import SentryConfiguration
+from flox_sentry.project import create_team, create_project, assing_teams, dump_variables
 
 
 class SentryPlugin(Plugin):
@@ -10,8 +11,9 @@ class SentryPlugin(Plugin):
         return SentryConfiguration()
 
     def handle_variables(self, flox: Flox):
-        pass
-
+        return (
+            Stage(dump_variables, 1900),
+        )
 
     def handle_project(self, flox: Flox):
         return [
