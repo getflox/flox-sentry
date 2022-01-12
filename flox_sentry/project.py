@@ -1,5 +1,6 @@
-from flox_sentry.sentry import with_sentry, Sentry, SentryException, DuplicatedException
 from floxcore.context import Flox
+
+from flox_sentry.sentry import with_sentry, Sentry, SentryException, DuplicatedException
 
 
 @with_sentry
@@ -36,9 +37,21 @@ def create_project(flox: Flox, sentry: Sentry, out, **kwargs):
         out.error(e)
         return {}
 
-    return dict(
-        dsn=key.get("sentry_dsn", {}).get("public")
-    )
+
+@with_sentry
+def dump_variables(flox: Flox, sentry: Sentry, out, **kwargs):
+    try:
+        key = next(filter(lambda x: x["name"] == "flox", sentry.get_key(flox.id, "flox")), None)
+
+        return dict(
+            dsn=key.get("dsn", {}).get("public")
+        )
+    except SentryException as e:
+        out.error(e)
+        return {}
+
+    return dict()
+
 
 @with_sentry
 def assing_teams(flox: Flox, sentry: Sentry, out, **kwargs):

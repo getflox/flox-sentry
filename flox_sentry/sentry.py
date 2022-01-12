@@ -65,6 +65,16 @@ class Sentry:
 
         return r.json()
 
+    def get_key(self, project_id: str, name: str) -> None:
+        r = self.http_client.get(f"projects/{self.organization}/{project_id}/keys/")
+
+        try:
+            r.raise_for_status()
+        except HTTPError as e:
+            raise SentryException(e)
+
+        return r.json()
+
     def create_team(self, team: str) -> None:
         r = self.http_client.post(f"organizations/{self.organization}/teams/",
                                   json={"name": team, "slug": slugify(team)})
