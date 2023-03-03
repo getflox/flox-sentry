@@ -1,76 +1,36 @@
-from floxcore.context import Flox
+from floxcore import FloxContext
+from sentry_api.api import SentryApi
 
-from flox_sentry.sentry import with_sentry, Sentry, SentryException, DuplicatedException
-
-
-@with_sentry
-def create_team(flox: Flox, sentry: Sentry, out, **kwargs):
-    """Create sentry teams"""
-    team = flox.name
-    try:
-        sentry.create_team(team)
-        out.success(f'Team "{team}" created')
-    except DuplicatedException as e:
-        out.info(e)
-    except SentryException as e:
-        out.error(e)
+from flox_sentry.sentry import with_sentry
 
 
 @with_sentry
-def create_project(flox: Flox, sentry: Sentry, out, **kwargs):
+def create_project(flox: FloxContext, sentry: SentryApi, output, **kwargs):
     """Create sentry project"""
-    try:
-        sentry.create_project(flox.id, flox.name, flox.settings.sentry.default_team)
-        out.success(f'Project "{flox.id}" created')
-    except DuplicatedException as e:
-        out.info(e)
-    except SentryException as e:
-        out.error(e)
-        return {}
+    output.info("Creating/Updating sentry project")
 
-    key = {}
-    try:
-        key = sentry.create_key(flox.id, "flox")
-    except DuplicatedException as e:
-        out.info(e)
-    except SentryException as e:
-        out.error(e)
-        return {}
-
-
-@with_sentry
-def dump_variables(flox: Flox, sentry: Sentry, out, **kwargs):
-    try:
-        key = next(filter(lambda x: x["name"] == "flox", sentry.get_key(flox.id, "flox")), None)
-
-        return dict(
-            dsn=key.get("dsn", {}).get("public")
-        )
-    except SentryException as e:
-        out.error(e)
-        return {}
-
-    return dict()
-
-
-@with_sentry
-def assing_teams(flox: Flox, sentry: Sentry, out, **kwargs):
-    """Assign project to the teams"""
-    sentry.get_project(flox.id)
-
-    teams = []
-    for team in flox.settings.sentry.assign_teams:
-        try:
-            team = sentry.get_team(flox.id, team)
-            teams.append(dict(id=team.get("id"), name=team.get("name"), slug=team.get("slug")))
-        except Exception:
-            out.warning(f"Unable to find '{team}' team, skipping")
-
-    sentry.update_project(
-        flox.id,
-        flox.settings.sentry.default_team,
-        dict(teams=teams)
+    sentry.projects.upsert(
+        project_slug=flox.project.id,
+        team_slug=flox.profile.sentry.team.slug,
+        project=dict(
+            name=flox.project.name, slug=flox.project.id, default_rules=False if flox.profile.sentry.rules else True
+        ),
     )
-    teams_str = ", ".join(flox.settings.sentry.assign_teams)
 
-    out.success(f"Assigned {teams_str} teams to {flox.id} project")
+
+@with_sentry
+def create_alerts(flox: FloxContext, sentry: SentryApi, output, **kwargs):
+    """Create sentry rules"""
+    if not flox.profile.sentry.rules:
+        return
+    output.info("Creating/Updating sentry alert rules")
+
+    existing_rules = sentry.project_rules.all(project_slug=flox.project.id).json()
+    for rule in flox.profile.sentry.rules:
+        rule_exists = next(
+            iter(filter(lambda existing_rule: existing_rule.get("name") == rule.get("name"), existing_rules)), None
+        )
+        if not rule_exists:
+            sentry.project_rules.create(project_slug=flox.project.id, rule=rule)
+        else:
+            sentry.project_rules.update(project_slug=flox.project.id, rule_id=rule_exists.get("id"), rule=rule)

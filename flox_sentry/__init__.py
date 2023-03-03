@@ -1,31 +1,14 @@
-from floxcore.command import Stage
-from floxcore.context import Flox
-from floxcore.plugin import Plugin
+from floxcore import Plugin
 
-from flox_sentry.configure import SentryConfiguration
-from flox_sentry.project import create_team, create_project, assing_teams, dump_variables
+from flox_sentry.project import create_alerts, create_project
 
 
 class SentryPlugin(Plugin):
-    def configuration(self):
-        return SentryConfiguration()
+    def __init__(self) -> None:
+        super().__init__(help="Setup Sentry for your project")
 
-    def handle_variables(self, flox: Flox):
-        return (
-            Stage(dump_variables, 1900),
-        )
-
-    def handle_project(self, flox: Flox):
-        return [
-            Stage(create_team, require=["sentry.create_team"]),
-            Stage(create_project, 1900),
-            Stage(dump_variables, 1900),
-            Stage(assing_teams),
-        ]
-
-    def configured(self, flox) -> bool:
-        return all([flox.settings.sentry.default_team, flox.settings.sentry.organization])
+        self.project_stages.add(callback=create_project, priority=10000)
+        self.project_stages.add(callback=create_alerts, priority=20000)
 
 
-def plugin():
-    return SentryPlugin()
+plugin = SentryPlugin()
