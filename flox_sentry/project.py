@@ -31,6 +31,7 @@ def create_alerts(flox: FloxContext, sentry: SentryApi, output, **kwargs):
     existing_rules = sentry.project_rules.all(project_slug=flox.project.id).json()
     for rule in flox.profile.sentry.rules:
         rule_name = rule.get("name").replace("{project_id}", flox.project.id)
+        rule["name"] = rule_name
 
         rule_exists = next(
             iter(filter(lambda existing_rule: existing_rule.get("name") == rule_name, existing_rules)), None
